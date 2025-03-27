@@ -63,7 +63,25 @@ def trainging_loops(model, opt, criterion, train_dl, val_dl, epochs, device, log
             print(f"Epoch {epoch + 1} train loss: {train_loss[-1]} val loss: {val_loss[-1]}")
     return train_loss, val_loss
 
+def simple_ANN(train_dl, val_dl, criterion, hyperparameters, device):
 
+    # Assign hyperparameters to variables
+    hidden_size = hyperparameters['hidden_size']
+    learning_rate = hyperparameters['learning_rate']
+    num_epochs = hyperparameters['num_epochs']
+    batch_size = hyperparameters['batch_size']
+    num_layers = hyperparameters['num_layers']
+    model_type = hyperparameters['model']
+    sequence_length = hyperparameters['sequence_length']
+
+    # NN take in input the current displacement, and cursor position
+    # it output the predicted displacement 
+    model = ANN(input_size=x[0].shape[0], output_size=2, hidden_size=hidden_size, num_layers=num_layers).to(device)
+    opt = optim.Adam(model.parameters(), lr=learning_rate)
+
+    train_loss, val_loss = trainging_loops(model, opt, criterion, train_dl, val_dl, num_epochs, device)
+
+    return model, train_loss, val_loss
 if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -78,24 +96,12 @@ if __name__ == "__main__":
     for key, value in hyperparameters.items():
         print(f"{key}: {value}")
 
-    # Assign hyperparameters to variables
-    hidden_size = hyperparameters['hidden_size']
-    learning_rate = hyperparameters['learning_rate']
-    num_epochs = hyperparameters['num_epochs']
-    batch_size = hyperparameters['batch_size']
-    num_layers = hyperparameters['num_layers']
-    model_type = hyperparameters['model']
-    sequence_length = hyperparameters['sequence_length']
-
     
     print("Hyperparameters:")
     for key, value in hyperparameters.items():
         print(f"{key}: {value}")
     print("using device : ",device)
-
-
-
-
+    batch_size = hyperparameters['batch_size']
 
     x, y, targets = read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C0.csv", "vec")
     
@@ -112,17 +118,10 @@ if __name__ == "__main__":
 
     train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dl = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
-
-
-    # NN take in input the current displacement, and cursor position
-    # it output the predicted displacement 
-    model = ANN(input_size=x[0].shape[0], output_size=2, hidden_size=hidden_size, num_layers=num_layers).to(device)
-
-
     criterion = nn.MSELoss()
-    opt = optim.Adam(model.parameters(), lr=learning_rate)
 
-    train_loss, val_loss = trainging_loops(model, opt, criterion, train_dl, val_dl, num_epochs, device)
+    model, train_loss, val_loss = simple_ANN(train_dl, val_dl, criterion, hyperparameters, device)
+
 
     torch.save(model.state_dict(), log_dir + "model.pt")
     loss = {"train_loss": train_loss, "val_loss": val_loss}
