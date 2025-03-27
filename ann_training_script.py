@@ -63,7 +63,7 @@ def trainging_loops(model, opt, criterion, train_dl, val_dl, epochs, device, log
             print(f"Epoch {epoch + 1} train loss: {train_loss[-1]} val loss: {val_loss[-1]}")
     return train_loss, val_loss
 
-def simple_ANN(train_dl, val_dl, criterion, hyperparameters, device):
+def train_ann(hyperparameters, device):
 
     # Assign hyperparameters to variables
     hidden_size = hyperparameters['hidden_size']
@@ -79,9 +79,32 @@ def simple_ANN(train_dl, val_dl, criterion, hyperparameters, device):
     model = ANN(input_size=x[0].shape[0], output_size=2, hidden_size=hidden_size, num_layers=num_layers).to(device)
     opt = optim.Adam(model.parameters(), lr=learning_rate)
 
+    x, y, _ = read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C0.csv", "vec")
+    
+    y = y.to_numpy()
+    scaler = MinMaxScaler()
+    x = scaler.fit_transform(x)
+
+    train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=False)
+    
+    train_dataset = FittsDataset(train_x, train_y)
+    val_dataset = FittsDataset(val_x, val_y)
+
+    
+
+    train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_dl = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+    criterion = nn.MSELoss()
+
     train_loss, val_loss = trainging_loops(model, opt, criterion, train_dl, val_dl, num_epochs, device)
 
     return model, train_loss, val_loss
+
+def train_lstm(hyperparameters, device):
+    pass # not implemented yet
+
+
+
 if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -103,25 +126,11 @@ if __name__ == "__main__":
     print("using device : ",device)
     batch_size = hyperparameters['batch_size']
 
-    x, y, targets = read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C0.csv", "vec")
-    
-    y = y.to_numpy()
-    scaler = MinMaxScaler()
-    x = scaler.fit_transform(x)
 
-    train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=False)
-    
-    train_dataset = FittsDataset(train_x, train_y)
-    val_dataset = FittsDataset(val_x, val_y)
-
-    
-
-    train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_dl = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
-    criterion = nn.MSELoss()
-
-    model, train_loss, val_loss = simple_ANN(train_dl, val_dl, criterion, hyperparameters, device)
-
+    if hyperparameters['model'] == "ANN":
+        model, train_loss, val_loss = train_ann(hyperparameters, device)
+    else: 
+        model, train_loss, val_loss = train_lstm(hyperparameters, device)
 
     torch.save(model.state_dict(), log_dir + "model.pt")
     loss = {"train_loss": train_loss, "val_loss": val_loss}
