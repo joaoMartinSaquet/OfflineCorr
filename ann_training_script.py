@@ -5,8 +5,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from collections import deque
 from torch.utils.data import DataLoader
+import os
 
-
+import shutil
 
 from dataset_handling import *
 from model_handling import *
@@ -20,7 +21,7 @@ import json
 # to remove pandas error
 pd.options.mode.chained_assignment = None
 
-# TODO : log, other models ( cgp, LSTM, RNN, GRN )
+# TODO : log, other models ( cgp, LSTM, RNN, GRN ), find why is ther overfitting ! 
 
 def trainging_loops(model, opt, criterion, train_dl, val_dl, epochs, device, log_mod = 10):
 
@@ -67,6 +68,9 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
+    experiment_name = "P0_C0"
+    log_dir = "results/" + experiment_name + "/"
+    os.makedirs(log_dir, exist_ok=True)
     # read hyperparameters
     config = load_config("config/ann_config.yaml")
     hyperparameters = config['hyperparameters']
@@ -119,6 +123,11 @@ if __name__ == "__main__":
     opt = optim.Adam(model.parameters(), lr=learning_rate)
 
     train_loss, val_loss = trainging_loops(model, opt, criterion, train_dl, val_dl, num_epochs, device)
+
+    torch.save(model.state_dict(), log_dir + "model.pt")
+    loss = {"train_loss": train_loss, "val_loss": val_loss}
+    pd.DataFrame(loss).to_csv(log_dir + "loss.csv")
+    shutil.copy("config/ann_config.yaml", log_dir + "config.yaml")
 
     plt.plot(train_loss)
     plt.plot(val_loss)
