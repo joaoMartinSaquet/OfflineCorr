@@ -1,6 +1,7 @@
 import pandas as pd
 from torch.utils.data import Dataset
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 pd.options.mode.chained_assignment = None
 
@@ -11,7 +12,7 @@ def read_dataset(datasets : str, type : str):
         
         df = pd.read_csv(datasets)
 
-        x = df[["x", "y","dx", "dy"]] 
+        x = df[["x", "y","dx", "dy", "dt"]] 
         targets = df[["x_to", "y_to"]]
         y = construct_ground_truth(df[["x", "y"]], df[["x_to", "y_to"]], type)
 
@@ -69,10 +70,21 @@ def construct_ground_truth(cursor_pose, target_pose, type):
     #     y['dy'] = target_pose['y_to'] - cursor_pose['y']
     return pd.DataFrame(y)
 
+def preprocess_dataset(x, y, scaler_type = "minmax"):
     
+    y = y.to_numpy()
+    if scaler_type == "minmax":
+        scaler = MinMaxScaler(feature_range=(-1, 1))
+    elif scaler_type == "std":
+        scaler = StandardScaler()
+    x = scaler.fit_transform(x)
+
+    return x, y, scaler    
+
+
 
 if __name__ == "__main__":
-    x, y =read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C1.csv", "vec")
+    x, y, _=read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C1.csv", "vec")
 
     print("x : \n", x)
     print("y : \n", y)

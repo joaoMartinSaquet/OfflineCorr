@@ -16,11 +16,10 @@ def load_config(config_path):
             config = json.load(file)
         return config
 
-def load_hyperparameters(config_path):
+def load_hyperparameters(hyperparameters):
 
-    config  = load_config(config_path)
-    hyperparameters = config['hyperparameters']
     # Assign hyperparameters to variables
+    
     hidden_size = hyperparameters['hidden_size']
     learning_rate = hyperparameters['learning_rate']
     num_epochs = hyperparameters['num_epochs']

@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from collections import deque
 from torch.utils.data import DataLoader
 import os
@@ -66,34 +65,48 @@ def trainging_loops(model, opt, criterion, train_dl, val_dl, epochs, device, log
 def train_ann(hyperparameters, device):
 
     # Assign hyperparameters to variables
-    hidden_size = hyperparameters['hidden_size']
-    learning_rate = hyperparameters['learning_rate']
-    num_epochs = hyperparameters['num_epochs']
-    batch_size = hyperparameters['batch_size']
-    num_layers = hyperparameters['num_layers']
-    model_type = hyperparameters['model']
-    sequence_length = hyperparameters['sequence_length']
+    hidden_size, learning_rate, num_epochs, batch_size, num_layers, _, _ = load_hyperparameters(hyperparameters)
 
-    # NN take in input the current displacement, and cursor position
-    # it output the predicted displacement 
     x, y, _ = read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C0.csv", "vec")
-    
-    y = y.to_numpy()
-    scaler = MinMaxScaler()
-    x = scaler.fit_transform(x)
+    x, y, scaler =     preprocess_dataset(x, y)
 
     train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=False)
-    
     train_dataset = FittsDataset(train_x, train_y)
     val_dataset = FittsDataset(val_x, val_y)
-
-    
 
     train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dl = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
     criterion = nn.MSELoss()
 
+    # NN take in input the current displacement, and cursor position
+    # it output the predicted displacement 
     model = ANN(input_size=x[0].shape[0], output_size=2, hidden_size=hidden_size, num_layers=num_layers).to(device)
+    opt = optim.Adam(model.parameters(), lr=learning_rate)
+
+    train_loss, val_loss = trainging_loops(model, opt, criterion, train_dl, val_dl, num_epochs, device)
+
+    return model, train_loss, val_loss
+
+def train_lstm(exp_name, hyperparameters, device):
+
+
+    # Assign hyperparameters to variables
+    hidden_size, learning_rate, num_epochs, batch_size, num_layers, _, seq_l = load_hyperparameters(hyperparameters)
+
+    x, y, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{exp_name}.csv", "vec")
+    x, y, scaler = preprocess_dataset(x, y, 'minmax')
+
+    train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=False)
+    train_dataset = FittsDatasetSeq(train_x, train_y, sequence_length=seq_l)
+    val_dataset = FittsDatasetSeq(val_x, val_y, sequence_length=seq_l)
+
+    train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+    val_dl = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+    criterion = nn.MSELoss()
+
+    # NN take in input the current displacement, and cursor position
+    # it output the predicted displacement 
+    model = LSTMModel(input_size=x[0].shape[0], output_size=2, hidden_size=hidden_size, num_layers=num_layers).to(device)
     opt = optim.Adam(model.parameters(), lr=learning_rate)
 
 
@@ -101,26 +114,19 @@ def train_ann(hyperparameters, device):
 
     return model, train_loss, val_loss
 
-def train_lstm(hyperparameters, device):
-    pass # not implemented yet
-
 
 
 if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
-    experiment_name = "P0_C0"
-    log_dir = "results/" + experiment_name + "/"
-    os.makedirs(log_dir, exist_ok=True)
+    experiment_name = "P0_C1"
+
+
+    print("---------------- {} ----------------".format(experiment_name))
     # read hyperparameters
     config = load_config("config/ann_config.yaml")
-    hyperparameters = config['hyperparameters']
-    print("Hyperparameters:")
-    for key, value in hyperparameters.items():
-        print(f"{key}: {value}")
-
-    
+    hyperparameters = config['hyperparameters']    
     print("Hyperparameters:")
     for key, value in hyperparameters.items():
         print(f"{key}: {value}")
@@ -128,11 +134,16 @@ if __name__ == "__main__":
     batch_size = hyperparameters['batch_size']
     model_type = hyperparameters['model']
     log_dir = f"results/{experiment_name}/{model_type}/"
-
+    print("logging to ", log_dir)
+    os.makedirs(log_dir, exist_ok=True)
+    
     if model_type == "ANN":
-        model, train_loss, val_loss = train_ann(hyperparameters, device)
-    else: 
-        model, train_loss, val_loss = train_lstm(hyperparameters, device)
+        model, train_loss, val_loss = train_ann(experiment_name,hyperparameters, device)
+    elif model_type == "LSTM": 
+        model, train_loss, val_loss = train_lstm(experiment_name, hyperparameters, device)
+    else:
+        raise ValueError(f"Unknown model type: {model_type}")
+    
 
     torch.save(model.state_dict(), log_dir + "model.pt")
     loss = {"train_loss": train_loss, "val_loss": val_loss}
@@ -145,5 +156,4 @@ if __name__ == "__main__":
     plt.title("ANN loss")
     plt.xlabel("epoch")
     plt.ylabel("loss")
-
-    plt.show()
+    plt.savefig(log_dir + "loss.png")
