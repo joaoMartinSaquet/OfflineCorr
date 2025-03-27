@@ -126,9 +126,10 @@ if __name__ == "__main__":
         print(f"{key}: {value}")
     print("using device : ",device)
     batch_size = hyperparameters['batch_size']
+    model_type = hyperparameters['model']
+    log_dir = f"results/{experiment_name}/{model_type}/"
 
-
-    if hyperparameters['model'] == "ANN":
+    if model_type == "ANN":
         model, train_loss, val_loss = train_ann(hyperparameters, device)
     else: 
         model, train_loss, val_loss = train_lstm(hyperparameters, device)
