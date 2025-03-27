@@ -1,21 +1,23 @@
 import pandas as pd
 from torch.utils.data import Dataset
+import numpy as np
 
+pd.options.mode.chained_assignment = None
 
-def read_dataset(datasets : str):
+MAX_DISPLACEMENT = 40
+
+def read_dataset(datasets : str, type : str):
+        
+        
         df = pd.read_csv(datasets)
 
-        data = df[["x", "y","x_to","y_to"]] # maybe i need to add dt 
-        # idea -> take t
-        
-        # data['dt'] = df["dt"]
-        # data['xlag'] = data["x"].shift(1)
-        # data['ylag'] = data["y"].shift(1)
+        x = df[["x", "y","dx", "dy"]] 
+        targets = df[["x_to", "y_to"]]
+        y = construct_ground_truth(df[["x", "y"]], df[["x_to", "y_to"]], type)
 
-        data.fillna(0, inplace=True)
-        # print(df.columns)
-        y = df[['dx', 'dy']]
-        return data, y
+        x.fillna(0, inplace=True)
+
+        return x, y, targets
 
 class FittsDataset(Dataset):
     def __init__(self,x, y):        
@@ -42,13 +44,38 @@ class FittsDatasetSeq(Dataset):
         # return self.data.iloc[idx:idx+self.seq_l, :].to_numpy(), self.y_gt.iloc[idx + self.seq_l, :].to_numpy()
         return self.data[idx:idx+self.seq_l, :], self.y_gt[idx + self.seq_l, :]
 
-def construct_ground_truth(x, y, type):
+def construct_ground_truth(cursor_pose, target_pose, type):
     """
         
         - vec ground truth is the best dx between Ct and Tt it is the believed  
             (IE at each instant it s a straight line leading to the target)
         - second type is an smoothed version of the trajectory to fit a more natural lines between positions and targets
     """
-    pass
+    y = {}
+    if type == "vec":
+        # doesn't work, clipping the displacement change direction :(
+        dx = (target_pose['x_to'] - cursor_pose['x'])
+        dy = (target_pose['y_to'] - cursor_pose['y'])
+        mag = np.clip(np.sqrt(dx**2 + dy**2), 0, MAX_DISPLACEMENT)
+        angle = np.arctan2(dy, dx)
 
+        y['dx'] = mag * np.cos(angle)
+        y['dy'] = mag * np.sin(angle)
+
+
+        # target_pose['x_to'] - cursor_pose['x']
+    # elif type == "smooth":
+    #     y['dx'] = target_pose['x_to'] - cursor_pose['x']
+    #     y['dy'] = target_pose['y_to'] - cursor_pose['y']
+    return pd.DataFrame(y)
+
+    
+
+if __name__ == "__main__":
+    x, y =read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C1.csv", "vec")
+
+    print("x : \n", x)
+    print("y : \n", y)
+
+    print("y mag : \n", np.sqrt(y['dx']**2 + y['dy']**2))
 

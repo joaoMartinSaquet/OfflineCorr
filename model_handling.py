@@ -31,9 +31,9 @@ def load_hyperparameters(config_path):
 
     return hidden_size, learning_rate, num_epochs, batch_size, num_layers, model_type, sequence_length
 
-class SimpleNN(nn.Module):
+class ANN(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, output_size):
-        super(SimpleNN, self).__init__()
+        super(ANN, self).__init__()
 
         self.hidden_layers = nn.ModuleList([nn.Linear(hidden_size, hidden_size) for i in range(num_layers)])
         self.fcI = nn.Linear(input_size, hidden_size)
