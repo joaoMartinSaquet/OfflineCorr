@@ -76,9 +76,6 @@ def train_ann(hyperparameters, device):
 
     # NN take in input the current displacement, and cursor position
     # it output the predicted displacement 
-    model = ANN(input_size=x[0].shape[0], output_size=2, hidden_size=hidden_size, num_layers=num_layers).to(device)
-    opt = optim.Adam(model.parameters(), lr=learning_rate)
-
     x, y, _ = read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C0.csv", "vec")
     
     y = y.to_numpy()
@@ -95,6 +92,10 @@ def train_ann(hyperparameters, device):
     train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_dl = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
     criterion = nn.MSELoss()
+
+    model = ANN(input_size=x[0].shape[0], output_size=2, hidden_size=hidden_size, num_layers=num_layers).to(device)
+    opt = optim.Adam(model.parameters(), lr=learning_rate)
+
 
     train_loss, val_loss = trainging_loops(model, opt, criterion, train_dl, val_dl, num_epochs, device)
 
