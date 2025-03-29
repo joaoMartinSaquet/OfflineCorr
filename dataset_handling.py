@@ -45,7 +45,8 @@ class FittsDatasetSeq(Dataset):
         # return self.data.iloc[idx:idx+self.seq_l, :].to_numpy(), self.y_gt.iloc[idx + self.seq_l, :].to_numpy()
         return self.data[idx:idx+self.seq_l, :], self.y_gt[idx + self.seq_l, :]
 
-def construct_ground_truth(cursor_pose, target_pose, type):
+# target width is hardcoded, need to get him from dataset to ! 
+def construct_ground_truth(cursor_pose, target_pose, type, target_width = 60):
     """
         
         - vec ground truth is the best dx between Ct and Tt it is the believed  
@@ -54,7 +55,8 @@ def construct_ground_truth(cursor_pose, target_pose, type):
     """
     y = {}
     if type == "vec":
-        # doesn't work, clipping the displacement change direction :(
+
+        
         dx = (target_pose['x_to'] - cursor_pose['x'])
         dy = (target_pose['y_to'] - cursor_pose['y'])
         mag = np.clip(np.sqrt(dx**2 + dy**2), 0, MAX_DISPLACEMENT)
@@ -63,7 +65,12 @@ def construct_ground_truth(cursor_pose, target_pose, type):
         y['dx'] = mag * np.cos(angle)
         y['dy'] = mag * np.sin(angle)
 
-
+                # we need to say that if the cursor is in target dx is 0 ! 
+        dist_cursor_target = np.sqrt((target_pose['x_to'] - cursor_pose['x'])**2 + (target_pose['y_to'] - cursor_pose['y'])**2)
+        indexes = np.where(dist_cursor_target < target_width)[0]
+        if indexes.shape[0] > 0:
+            y['dx'][indexes] = 0
+            y['dy'][indexes] = 0
         # target_pose['x_to'] - cursor_pose['x']
     # elif type == "smooth":
     #     y['dx'] = target_pose['x_to'] - cursor_pose['x']
@@ -84,7 +91,7 @@ def preprocess_dataset(x, y, scaler_type = "minmax"):
 
 
 if __name__ == "__main__":
-    x, y, _=read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C1.csv", "vec")
+    x, y, _=read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C0.csv", "vec")
 
     print("x : \n", x)
     print("y : \n", y)

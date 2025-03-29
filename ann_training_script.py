@@ -20,7 +20,7 @@ import json
 # to remove pandas error
 pd.options.mode.chained_assignment = None
 
-# TODO : log, other models ( cgp, LSTM, RNN, GRN ), find why is ther overfitting ! 
+# TODO : ,other models ( cgp,, GRN ), find why is ther overfitting, simulation script  !! 
 
 def trainging_loops(model, opt, criterion, train_dl, val_dl, epochs, device, log_mod = 10):
 
@@ -62,12 +62,12 @@ def trainging_loops(model, opt, criterion, train_dl, val_dl, epochs, device, log
             print(f"Epoch {epoch + 1} train loss: {train_loss[-1]} val loss: {val_loss[-1]}")
     return train_loss, val_loss
 
-def train_ann(hyperparameters, device):
+def train_ann(exp_name, hyperparameters, device):
 
     # Assign hyperparameters to variables
     hidden_size, learning_rate, num_epochs, batch_size, num_layers, _, _ = load_hyperparameters(hyperparameters)
 
-    x, y, _ = read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C0.csv", "vec")
+    x, y, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{exp_name}.csv", "vec")
     x, y, scaler =     preprocess_dataset(x, y)
 
     train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=False)
