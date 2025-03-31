@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
 pd.options.mode.chained_assignment = None
 
-MAX_DISPLACEMENT = 40
+MAX_DISPLACEMENT = 80
 
 def read_dataset(datasets : str, type : str):
         
@@ -68,7 +68,7 @@ def construct_ground_truth(cursor_pose, target_pose, type, target_width = 60):
                 # we need to say that if the cursor is in target dx is 0 ! 
         dist_cursor_target = np.sqrt((target_pose['x_to'] - cursor_pose['x'])**2 + (target_pose['y_to'] - cursor_pose['y'])**2)
         indexes = np.where(dist_cursor_target < target_width)[0]
-        if indexes.shape[0] > 0:
+        if indexes.shape[0] > 0:    
             y['dx'][indexes] = 0
             y['dy'][indexes] = 0
         # target_pose['x_to'] - cursor_pose['x']

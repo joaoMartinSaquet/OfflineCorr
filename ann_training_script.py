@@ -120,7 +120,7 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     
-    experiment_name = "P0_C1"
+    experiment_name = "P0_C0"
 
 
     print("---------------- {} ----------------".format(experiment_name))
@@ -144,8 +144,8 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Unknown model type: {model_type}")
     
-
-    torch.save(model.state_dict(), log_dir + "model.pt")
+    
+    torch.save(model, log_dir + "model.pt")
     loss = {"train_loss": train_loss, "val_loss": val_loss}
     pd.DataFrame(loss).to_csv(log_dir + "loss.csv")
     shutil.copy("config/ann_config.yaml", log_dir + "config.yaml")
