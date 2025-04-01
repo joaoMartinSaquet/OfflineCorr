@@ -70,7 +70,7 @@ def train_ann(exp_name, hyperparameters, device):
     x, y, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{exp_name}.csv", "vec")
     x, y, scaler =     preprocess_dataset(x, y)
 
-    train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=False)
+    train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.001, random_state=42, shuffle=False)
     train_dataset = FittsDataset(train_x, train_y)
     val_dataset = FittsDataset(val_x, val_y)
 

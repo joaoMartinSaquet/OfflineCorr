@@ -12,7 +12,7 @@ def read_dataset(datasets : str, type : str):
         
         df = pd.read_csv(datasets)
 
-        x = df[["x", "y","dx", "dy", "dt"]] 
+        x = df[["x", "y","dx", "dy"]] # i removed dt ! 
         targets = df[["x_to", "y_to"]]
         y = construct_ground_truth(df[["x", "y"]], df[["x_to", "y_to"]], type)
 
@@ -82,10 +82,18 @@ def preprocess_dataset(x, y, scaler_type = "minmax"):
     y = y.to_numpy()
     if scaler_type == "minmax":
         scaler = MinMaxScaler(feature_range=(-1, 1))
+        x = scaler.fit_transform(x)
     elif scaler_type == "std":
         scaler = StandardScaler()
-    x = scaler.fit_transform(x)
-
+        x = scaler.fit_transform(x)
+    elif scaler_type == "custom":
+        # it is a scaler with my values, not the sklearn one (-1, 1)
+        data_min = np.array([0, 0, -MAX_DISPLACEMENT, -MAX_DISPLACEMENT, 0])
+        data_max = np.array([1920, 1080, MAX_DISPLACEMENT, MAX_DISPLACEMENT, 500])
+        scaler = MinMaxScaler(feature_range=(-1, 1))
+        scaler.data_max_ = data_max
+        scaler.data_min_ = data_min
+        x = scaler.transform(x)
     return x, y, scaler    
 
 

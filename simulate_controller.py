@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import time
+from model_handling import *
+from collections import deque
 
 '''
 This script is a script that is going to load the trained model 
@@ -14,16 +16,17 @@ This script is a script that is going to load the trained model
 and be tested on the user directly to see if there is any differences between with and without the controller
 '''
 
-DEBUG_ONMOVE_POSITION = True
+DEBUG_ONMOVE_POSITION = False
 DEBUG_CORRECTION_STEP = True
 
 class Corrector(object):
     """Controller with the model"""
 
-    def __init__(self, model, device):
+    def __init__(self, model, device, seq_length=None):
 
         self.corrector = model.eval()
         self.device = device
+        self.seq_length = seq_length
 
         # initialization
         self.x_poses = []
@@ -40,11 +43,19 @@ class Corrector(object):
         self.x_poses.append(self.mouse.position[0])
         self.y_poses.append(self.mouse.position[1])
 
-        self.min_input = np.array([0, 0, -80, -80, 0])
-        self.max_input = np.array([1920, 1080, 80, 80, 500])
+        # with dt
+        # self.min_input = np.array([0, 0, -80, -80, 0])
+        # self.max_input = np.array([1920, 1080, 80, 80, 500])
 
+        # without dt
+        self.max_input = np.array([1920, 1080, 80, 80])
+        self.min_input = np.array([0, 0, -80, -80])
 
+        if seq_length is not None:
+            self.model_input = deque([], maxlen=seq_length)
 
+            for i in range(seq_length):
+                self.model_input.append(np.zeros(4))
 
         print("Controller ready to be used !")
         print("Correction activated ? ", self.correct)
@@ -62,25 +73,30 @@ class Corrector(object):
         # keep dx and dy for log purpose
         # self.dxs.append(dx)
         # self.dys.append(dy)
+        if self.seq_length is None:
+            model_input = np.array([self.x_poses[-1], self.x_poses[-1], dx, dy]) # should i take current x and y or last one ? 
+            model_input = self.scale_input(model_input)
 
-        model_input = np.array([self.x_poses[-1], self.x_poses[-1], dx, dy, dt]) # should i take current x and y or last one ? 
-
-        # scale input
-        # model_input = self.scale_input(model_input)
+        else:
+            model_input = np.array([self.x_poses[-1], self.x_poses[-1], dx, dy]) # should i take current x and y or last one ? 
+            # scale input
+            model_input = self.scale_input(model_input)
+            self.model_input.append(model_input)
+            model_input = np.array(list(self.model_input))    
         
+
         model_input = torch.from_numpy(model_input).float()
-
-
+        
         # get the prediction
         with torch.inference_mode():
-            prediction = self.corrector(model_input)
+            prediction = self.corrector(model_input.unsqueeze(0))[0]
     
         
         dx = prediction[0]
         dy = prediction[1]
         
         # compute the predicted cursor position
-        cursor_position = (self.x_poses[-1] + dx, self.y_poses[-1] + dy)
+        cursor_position = (torch.round(self.x_poses[-1] + dx) , torch.round(self.y_poses[-1] + dy))
         
         print("x, y : ", (x,y), "cursor_position : ", cursor_position)
         
@@ -116,7 +132,7 @@ class Corrector(object):
 
                 # self.flag = False
 
-    def scale_model_input(self, x):
+    def scale_input(self, x):
 
         return (x - self.min_input) / (self.max_input - self.min_input) * 2 - 1 
 
@@ -137,14 +153,9 @@ class Corrector(object):
 
         self.k += 1
 
-        # redo the correction if the flag is down
+        # redue the correction if the flag is down
         if not self.do_correction and not has_corrected:
             self.do_correction = True
-
-
-
-
-
 
     def on_press(self, key):
 
@@ -152,7 +163,20 @@ class Corrector(object):
             self.listener.stop()
             # exit()
         if key == keyboard.Key.space:
-            self.mouse.position = (1, 0)
+            self.mouse.position = (0, 0)
+
+        if key == keyboard.Key.right:
+            self.mouse.move(10,0)
+
+        if key == keyboard.Key.left:
+            self.mouse.move(-10,0)
+        
+        if key == keyboard.Key.down:
+            self.mouse.move(0,10)
+        
+        if key == keyboard.Key.up:
+            self.mouse.move(0,-10)
+        
         if key == keyboard.Key.ctrl:
             self.correct = not self.correct
 
@@ -160,11 +184,15 @@ class Corrector(object):
 
 if __name__ == "__main__":
 
-    model_type = "ANN" # model to load
+    model_type = "LSTM" # model to load
     experiment = "P0_C0" # experiment to load
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model_log_path = f"results/{experiment}/{model_type}/"
-
+    
+    # read hyperparameters
+    config = load_config("config/ann_config.yaml")
+    hyperparameters = config['hyperparameters']
+    seq_length = hyperparameters['sequence_length']
 
     print("----------- Starting control for experiment : {} with model : {} -----------".format(experiment, model_type))
     
@@ -173,7 +201,14 @@ if __name__ == "__main__":
     model = torch.jit.script(model)
 
     # controller creation 
-    corrector = Corrector(model, device)
+    if model_type == "ANN":
+        corrector = Corrector(model, device)
+    elif model_type == "LSTM": 
+        corrector = Corrector(model, device, seq_length)
+    # elif model_type == "CGP":
+    #     corrector = Corrector(model, device, seq_length)
+    # elif model_type == "GRN":
+    #     corrector = Corrector(model, device, seq_length)
     with mouse.Listener(on_move=corrector.on_move), keyboard.Listener(on_press=corrector.on_press) as listener:
         corrector.set_listener(listener)
         listener.join()
