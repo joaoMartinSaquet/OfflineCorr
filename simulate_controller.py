@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import time
-from model_handling import *
+from utils.model_handling import *
 from collections import deque
 
 '''
