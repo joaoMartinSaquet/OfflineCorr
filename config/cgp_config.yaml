@@ -1,0 +1,4 @@
+hyperparameters :
+  population_size : 100
+  num_generations : 100
+  mutation_prob : 0.1
