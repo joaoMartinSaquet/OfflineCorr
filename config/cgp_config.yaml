@@ -1,4 +1,13 @@
 hyperparameters :
-  population_size : 100
-  num_generations : 100
-  mutation_prob : 0.1
+  # ea parameters
+  mu : 4
+  lambda : 12
+  m_const : 0.01
+  m_node : 0.2
+  m_output : 0.2
+  n_gen :  1000 # 50000
+
+
+  # cgp parameters
+  col : 60
+  row : 1

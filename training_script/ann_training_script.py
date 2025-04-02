@@ -7,8 +7,8 @@ import os
 
 import shutil
 
-from dataset_handling import *
-from model_handling import *
+from utils.dataset_handling import *
+from utils.model_handling import *
 
 
 import pandas as pd
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     print("using device : ",device)
     batch_size = hyperparameters['batch_size']
     model_type = hyperparameters['model']
-    log_dir = f"results/{experiment_name}/{model_type}/"
+    log_dir = f"../results/{experiment_name}/{model_type}/"
     print("logging to ", log_dir)
     os.makedirs(log_dir, exist_ok=True)
     
