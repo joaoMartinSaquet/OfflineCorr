@@ -1,0 +1,10 @@
+wandb_version: 1
+
+col:
+  value: 120
+lbd:
+  value: 100
+library:
+  value: 1
+mu:
+  value: 30

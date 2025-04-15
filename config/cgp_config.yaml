@@ -1,7 +1,7 @@
 hyperparameters :
   # ea parameters
-  mu : 4
-  lambda : 12
+  mu : 90
+  lambda : 80
   m_const : 0.01
   m_node : 0.2
   m_output : 0.2
@@ -9,5 +9,5 @@ hyperparameters :
 
 
   # cgp parameters
-  col : 60
+  col :   60
   row : 1

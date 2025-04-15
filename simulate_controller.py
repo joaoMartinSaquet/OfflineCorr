@@ -3,8 +3,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import time
+
+
+
+import os
+import sys
+file_path = os.path.abspath(__file__)
+script_directory = os.path.dirname(file_path)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
+
 from utils.model_handling import *
 from collections import deque
+
+
 
 '''
 This script is a script that is going to load the trained model 
@@ -78,7 +89,8 @@ class Corrector(object):
             model_input = self.scale_input(model_input)
 
         else:
-            model_input = np.array([self.x_poses[-1], self.x_poses[-1], dx, dy]) # should i take current x and y or last one ? 
+            # model_input = np.array([self.x_poses[-1], self.x_poses[-1], dx, dy]) # should i take current x and y or last one ? 
+            model_input = np.array([dx, dy])
             # scale input
             model_input = self.scale_input(model_input)
             self.model_input.append(model_input)

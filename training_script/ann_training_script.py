@@ -4,6 +4,13 @@ import torch.optim as optim
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 import os
+import sys 
+
+
+file_path = os.path.abspath(__file__)
+script_directory = os.path.dirname(file_path)
+print("script directory : ", script_directory)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import shutil
 

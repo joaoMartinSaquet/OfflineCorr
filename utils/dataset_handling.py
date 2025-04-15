@@ -7,17 +7,28 @@ pd.options.mode.chained_assignment = None
 
 MAX_DISPLACEMENT = 80
 
-def read_dataset(datasets : str, type : str):
+def read_dataset(datasets : str, type : str, lag_amout = 0, with_angle = False, with_position = False):
         
         
         df = pd.read_csv(datasets)
+        if with_position:
+            x = df[["x", "y","dx", "dy"]] # i removed dt ! 
+        else:
+            x = df[["dx", "dy"]]
+ 
+        if with_angle:
+            x["d_angle"] = np.atan2(df["dy"], df["dx"])
 
-        x = df[["x", "y","dx", "dy"]] # i removed dt ! 
         targets = df[["x_to", "y_to"]]
         y = construct_ground_truth(df[["x", "y"]], df[["x_to", "y_to"]], type)
 
-        x.fillna(0, inplace=True)
+        for k in range(lag_amout):
+            x[f"dx_{k+1}"] = x["dx"].shift(k+1)
+            x[f"dy_{k+1}"] = x["dy"].shift(k+1)
 
+
+        x.fillna(0, inplace=True)
+        
         return x, y, targets
 
 class FittsDataset(Dataset):
@@ -77,7 +88,7 @@ def construct_ground_truth(cursor_pose, target_pose, type, target_width = 60):
     #     y['dy'] = target_pose['y_to'] - cursor_pose['y']
     return pd.DataFrame(y)
 
-def preprocess_dataset(x, y, scaler_type = "minmax"):
+def preprocess_dataset(x, y, scaler_type = "minmax", feature_range = (-1, 1)):
     
     y = y.to_numpy()
     if scaler_type == "minmax":
@@ -90,7 +101,7 @@ def preprocess_dataset(x, y, scaler_type = "minmax"):
         # it is a scaler with my values, not the sklearn one (-1, 1)
         data_min = np.array([0, 0, -MAX_DISPLACEMENT, -MAX_DISPLACEMENT, 0])
         data_max = np.array([1920, 1080, MAX_DISPLACEMENT, MAX_DISPLACEMENT, 500])
-        scaler = MinMaxScaler(feature_range=(-1, 1))
+        scaler = MinMaxScaler(feature_range=feature_range)
         scaler.data_max_ = data_max
         scaler.data_min_ = data_min
         x = scaler.transform(x)
@@ -99,10 +110,24 @@ def preprocess_dataset(x, y, scaler_type = "minmax"):
 
 
 if __name__ == "__main__":
-    x, y, _=read_dataset("/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/P0_C0.csv", "vec")
-
+    
+    write_to_file = True
+    exp_name = "P0_C0"
+    x, y, _=read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{exp_name}.csv", "vec", True, True)
+    
     print("x : \n", x)
     print("y : \n", y)
 
-    print("y mag : \n", np.sqrt(y['dx']**2 + y['dy']**2))
+    # print("y mag : \n", np.sqrt(y['dx']**2 + y['dy']**2))
+    # if write_to_file:
+    #     for col_name in y.columns:
+    #         y.rename(columns={col_name: col_name + "_true"}, inplace=True)
+        
+    #     data = pd.concat([x, y], axis=1)
+
+    #     path = "datasets_java/P0_C0_x.csv"
+    #     data.to_csv(path, index=False)
+
+    print("input feature name : ", list(x.columns))
+    print("output feature name : ", list(y.columns))
 

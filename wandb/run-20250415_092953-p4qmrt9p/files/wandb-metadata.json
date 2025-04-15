@@ -1,0 +1,42 @@
+{
+  "os": "Linux-6.8.0-57-generic-x86_64-with-glibc2.35",
+  "python": "CPython 3.11.5",
+  "startedAt": "2025-04-15T07:29:53.965212Z",
+  "program": "/home/jmartinsaquet/Documents/code/IA2_codes/OfflineCorr/training_script/train_cgp.py",
+  "codePath": "training_script/train_cgp.py",
+  "git": {
+    "remote": "git@github.com:joaoMartinSaquet/OfflineCorr.git",
+    "commit": "05d2a3de1562d6a90ab9eb55176427daf0271922"
+  },
+  "email": "joao.martinsaquetpro@gmail.com",
+  "root": "/home/jmartinsaquet/Documents/code/IA2_codes/OfflineCorr",
+  "host": "dragonfly",
+  "executable": "/home/jmartinsaquet/.pyenv/versions/3.11.5/envs/neat/bin/python",
+  "codePathLocal": "training_script/train_cgp.py",
+  "cpu_count": 14,
+  "cpu_count_logical": 20,
+  "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "502921060352",
+      "used": "265836752896"
+    }
+  },
+  "memory": {
+    "total": "33291304960"
+  },
+  "cpu": {
+    "count": 14,
+    "countLogical": 20
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+      "memoryTotal": "8585740288",
+      "cudaCores": 3072,
+      "architecture": "Ada"
+    }
+  ],
+  "cudaVersion": "12.2"
+}

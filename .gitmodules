@@ -1,3 +1,6 @@
 [submodule "pyCGP"]
 	path = pyCGP
 	url = git@github.com:joaoMartinSaquet/pyCGP.git
+[submodule "training_script/GrnController"]
+	path = training_script/GrnController
+	url = git@github.com:joaoMartinSaquet/GrnController.git
