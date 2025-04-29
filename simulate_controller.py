@@ -10,8 +10,9 @@ import os
 import sys
 file_path = os.path.abspath(__file__)
 script_directory = os.path.dirname(file_path)
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
-
+print("script directory : ", script_directory)
+sys.path.append(os.path.abspath(script_directory))
+sys.path.append("/home/jmartinsaquet/Documents/code/IA2_codes/OfflineCorr/utils")
 from utils.model_handling import *
 from collections import deque
 
@@ -27,7 +28,7 @@ This script is a script that is going to load the trained model
 and be tested on the user directly to see if there is any differences between with and without the controller
 '''
 
-DEBUG_ONMOVE_POSITION = False
+DEBUG_ONMOVE_POSITION = True
 DEBUG_CORRECTION_STEP = True
 
 class Corrector(object):
@@ -47,7 +48,7 @@ class Corrector(object):
         self.dys = [0.]
         self.t = time.time()
         self.k = 0
-        self.correct = True
+        self.correct = False
         
         # get the mouse
         self.mouse = mouse.Controller()
@@ -59,8 +60,8 @@ class Corrector(object):
         # self.max_input = np.array([1920, 1080, 80, 80, 500])
 
         # without dt
-        self.max_input = np.array([1920, 1080, 80, 80])
-        self.min_input = np.array([0, 0, -80, -80])
+        self.max_input = np.array([80, 80, 1000, 3.14])
+        self.min_input = np.array([-80, -80, 0, 0])
 
         if seq_length is not None:
             self.model_input = deque([], maxlen=seq_length)
@@ -90,7 +91,7 @@ class Corrector(object):
 
         else:
             # model_input = np.array([self.x_poses[-1], self.x_poses[-1], dx, dy]) # should i take current x and y or last one ? 
-            model_input = np.array([dx, dy])
+            model_input = np.array([dx, dy, dt, np.atan2(dy, dx)])
             # scale input
             model_input = self.scale_input(model_input)
             self.model_input.append(model_input)
@@ -210,6 +211,8 @@ if __name__ == "__main__":
     
     # load model
     model = torch.load(model_log_path + "model.pt", weights_only=False).to("cpu")
+    # model = torch.load(model_log_path + "model.pt", map_location=torch.device('cpu'))
+
     model = torch.jit.script(model)
 
     # controller creation 

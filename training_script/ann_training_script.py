@@ -73,10 +73,10 @@ def train_ann(exp_name, hyperparameters, device):
     # Assign hyperparameters to variables
     hidden_size, learning_rate, num_epochs, batch_size, num_layers, _, _ = load_hyperparameters(hyperparameters)
 
-    x, y, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{exp_name}.csv", "vec")
+    x, y, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{exp_name}.csv", "vec", with_angle=True, lag_amout=10)
     x, y, scaler =     preprocess_dataset(x, y)
 
-    train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.001, random_state=42, shuffle=False)
+    train_x, val_x, train_y, val_y = train_test_split(x, y, test_size = 0.2, random_state=42, shuffle=False)
     train_dataset = FittsDataset(train_x, train_y)
     val_dataset = FittsDataset(val_x, val_y)
 
@@ -99,7 +99,7 @@ def train_lstm(exp_name, hyperparameters, device):
     # Assign hyperparameters to variables
     hidden_size, learning_rate, num_epochs, batch_size, num_layers, _, seq_l = load_hyperparameters(hyperparameters)
 
-    x, y, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{exp_name}.csv", "vec")
+    x, y, _, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{exp_name}.csv", "dir", with_angle=True)
     x, y, scaler = preprocess_dataset(x, y, 'minmax')
 
     train_x, val_x, train_y, val_y = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=False)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     print("using device : ",device)
     batch_size = hyperparameters['batch_size']
     model_type = hyperparameters['model']
-    log_dir = f"../results/{experiment_name}/{model_type}/"
+    log_dir = f"results/{experiment_name}/{model_type}/"
     print("logging to ", log_dir)
     os.makedirs(log_dir, exist_ok=True)
     

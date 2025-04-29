@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
 
     # load dataset
-    x, y, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{experiment_name}.csv", "vec")
+    x, y, _ = read_dataset(f"/home/jmartinsaquet/Documents/code/IA2_codes/clone/datasets/{experiment_name}.csv", "vec", with_angle=True)
     
     # process the dataset to be in range [-1;1]   
     xt, y, scaler = preprocess_dataset(x, y, 'minmax')
